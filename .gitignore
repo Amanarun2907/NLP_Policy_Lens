@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env/
+
+# Environment variables — DO NOT commit secrets
+.env
+
+# Streamlit cache
+.streamlit/
+
+# Outputs / generated files
+outputs/
+*.csv
+*.json
+*.pdf
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# spaCy models (large, download separately)
+en_core_web_sm/
+en_core_web_md/
+en_core_web_lg/

@@ -1,0 +1,3 @@
+@echo off
+echo Starting PolicyLens...
+streamlit run app.py
