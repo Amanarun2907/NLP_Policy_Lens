@@ -1701,7 +1701,87 @@ def _render_fin_doc(tabs, data, language):
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Financial health snapshot — mini gauges
+        # ── FINANCIAL HEALTH SCORE (new — real calculated score)
+        health = fd.get("financial_health", {})
+        if health:
+            _fd_section("🏥 Financial Health Score", "📊")
+            score = health.get("score", 0)
+            grade = health.get("grade", "B")
+            label = health.get("label", "Moderate")
+            color_map = {"green": DK_FD["green"], "orange": DK_FD["orange"], "red": DK_FD["red"]}
+            h_color = color_map.get(health.get("color", "orange"), DK_FD["orange"])
+
+            col1, col2 = st.columns([1, 2])
+            with col1:
+                import plotly.graph_objects as go
+                fig_health = go.Figure(go.Indicator(
+                    mode="gauge+number",
+                    value=score,
+                    title=dict(text=f"<b>Financial Health</b><br><span style='font-size:14px'>Grade: {grade} — {label}</span>",
+                               font=dict(size=15, color=DK_FD["text"])),
+                    number=dict(suffix="/100", font=dict(size=28, color=h_color)),
+                    gauge=dict(
+                        axis=dict(range=[0, 100], tickfont=dict(color=DK_FD["subtext"], size=10)),
+                        bar=dict(color=h_color, thickness=0.7),
+                        bgcolor=DK_FD["bg"], bordercolor=DK_FD["border"],
+                        steps=[
+                            dict(range=[0, 50],  color=DK_FD["red_dark"]),
+                            dict(range=[50, 65], color=DK_FD["orange_dark"]),
+                            dict(range=[65, 80], color=DK_FD["yellow_dark"]),
+                            dict(range=[80, 100],color=DK_FD["green_dark"]),
+                        ],
+                        threshold=dict(line=dict(color=h_color, width=4), thickness=0.8, value=score)
+                    )
+                ))
+                fig_health.update_layout(paper_bgcolor=DK_FD["paper"], font=dict(color=DK_FD["text"]),
+                                         margin=dict(t=60, b=20, l=20, r=20), height=260)
+                st.plotly_chart(fig_health, use_container_width=True)
+
+            with col2:
+                # Plain English explanation
+                st.markdown(f"""
+                <div style="background:{DK_FD['paper']};border:1px solid {h_color};border-radius:10px;
+                padding:16px 20px;margin-bottom:12px">
+                    <div style="font-size:13px;font-weight:700;color:{h_color};margin-bottom:8px">
+                        🗣️ What This Means For You (Plain English)
+                    </div>
+                    <div style="color:{DK_FD['text']};font-size:14px;line-height:1.7">
+                        {health.get('plain_english', '')}
+                    </div>
+                </div>""", unsafe_allow_html=True)
+
+                # Strengths and issues
+                strengths = health.get("strengths", [])
+                issues    = health.get("issues", [])
+                if strengths:
+                    st.markdown(f"**✅ Strengths:**")
+                    for s in strengths[:3]:
+                        st.markdown(f"<span style='color:{DK_FD['green_light']};font-size:13px'>• {s}</span>", unsafe_allow_html=True)
+                if issues:
+                    st.markdown(f"**⚠️ Issues:**")
+                    for i in issues[:3]:
+                        st.markdown(f"<span style='color:{DK_FD['red_light']};font-size:13px'>• {i}</span>", unsafe_allow_html=True)
+
+        # ── ACCURACY REPORT (real, not hardcoded)
+        acc = fd.get("accuracy_report", {})
+        if acc:
+            overall_acc = acc.get("overall_accuracy", 0)
+            acc_color   = DK_FD["green"] if overall_acc >= 90 else DK_FD["orange"] if overall_acc >= 80 else DK_FD["red"]
+            st.markdown(f"""
+            <div style="background:{DK_FD['paper']};border:1px solid {acc_color};border-radius:10px;
+            padding:12px 18px;margin-top:12px">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <div>
+                        <span style="color:{acc_color};font-size:20px;font-weight:800">{overall_acc:.1f}%</span>
+                        <span style="color:{DK_FD['subtext']};font-size:13px;margin-left:8px">Extraction Accuracy</span>
+                        <span style="background:{acc_color};color:white;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;margin-left:8px">Grade {acc.get('grade','B')}</span>
+                    </div>
+                    <span style="color:{acc_color};font-size:12px">{'✅ PASSED' if acc.get('validation_passed') else '⚠️ REVIEW'}</span>
+                </div>
+                <div style="display:flex;gap:16px;margin-top:8px;flex-wrap:wrap">
+                    {" ".join(f'<span style="color:{DK_FD["subtext"]};font-size:11px">{k.replace("_"," ").title()}: <b style="color:{DK_FD["text"]}">{v:.1f}%</b></span>' for k,v in acc.get("component_scores",{}).items())}
+                </div>
+            </div>""", unsafe_allow_html=True)
         _fd_section("🏥 Financial Health Snapshot", "📊")
         ratios = fd.get("ratio_summary",[])
         if ratios:
@@ -1842,6 +1922,90 @@ def _render_fin_doc(tabs, data, language):
             )
             st.plotly_chart(fig_bar, use_container_width=True)
 
+            # ── ADVANCED: Plain-English metric summary cards
+            _fd_section("💡 What These Numbers Mean (Simple Explanation)", "🗣️")
+            st.caption("Understanding financial metrics in plain language — no finance background needed!")
+
+            key_metrics = ["Revenue", "Net Profit", "EBITDA", "Debt", "Cash Flow", "EPS"]
+            metric_dict = {}
+            for m in metrics:
+                if m["metric"] not in metric_dict:
+                    metric_dict[m["metric"]] = m
+
+            cols_exp = st.columns(3)
+            col_idx  = 0
+            for metric_name in key_metrics:
+                if metric_name in metric_dict:
+                    m = metric_dict[metric_name]
+                    from modules.financial_doc_extractor import METRIC_EXPLANATIONS as _ME
+                    explanation = m.get("explanation") or _ME.get(metric_name, "")
+                    value_str   = m.get("amount") or (m.get("percent","") + "%") if m.get("percent") else "—"
+                    with cols_exp[col_idx % 3]:
+                        st.markdown(f"""
+                        <div style="background:{DK_FD['paper']};border:1px solid {DK_FD['border']};
+                        border-radius:10px;padding:14px;margin-bottom:10px;min-height:100px">
+                            <div style="font-size:13px;font-weight:700;color:{DK_FD['blue_light']};margin-bottom:4px">
+                                {metric_name}
+                            </div>
+                            <div style="font-size:16px;font-weight:800;color:{DK_FD['text']};margin-bottom:6px">
+                                {value_str}
+                            </div>
+                            <div style="font-size:12px;color:{DK_FD['subtext']};line-height:1.5">
+                                {explanation}
+                            </div>
+                        </div>""", unsafe_allow_html=True)
+                    col_idx += 1
+
+            # ── ADVANCED: Multi-year trend chart (if year data available)
+            year_data = {}
+            for m in metrics:
+                if m.get("year") and m.get("amount"):
+                    yr = m["year"]
+                    if yr not in year_data:
+                        year_data[yr] = {}
+                    if m["metric"] not in year_data[yr]:
+                        year_data[yr][m["metric"]] = m["amount"]
+
+            if len(year_data) >= 2:
+                import re as _re
+                _fd_section("📈 Multi-Year Trend Analysis", "📊")
+                st.caption("How key financial metrics have changed over the years")
+
+                years_sorted = sorted(year_data.keys())
+                trend_metrics = ["Revenue", "Net Profit", "EBITDA"]
+                fig_trend = go.Figure()
+
+                for tm in trend_metrics:
+                    y_vals = []
+                    x_vals = []
+                    for yr in years_sorted:
+                        if tm in year_data.get(yr, {}):
+                            raw = year_data[yr][tm]
+                            nums = _re.findall(r"[\d.]+", str(raw).replace(",", ""))
+                            if nums:
+                                x_vals.append(yr)
+                                y_vals.append(float(nums[0]))
+
+                    if len(x_vals) >= 2:
+                        fig_trend.add_trace(go.Scatter(
+                            x=x_vals, y=y_vals, mode="lines+markers",
+                            name=tm, line=dict(width=2.5),
+                            marker=dict(size=8),
+                            hovertemplate=f"<b>{tm}</b><br>Year: %{{x}}<br>Value: %{{y}}<extra></extra>"
+                        ))
+
+                if fig_trend.data:
+                    fig_trend.update_layout(
+                        title=dict(text="<b>Financial Metrics Trend Over Years</b>", font=dict(size=17, color=DK_FD["text"])),
+                        paper_bgcolor=DK_FD["paper"], plot_bgcolor=DK_FD["bg"],
+                        font=dict(color=DK_FD["text"]),
+                        xaxis=dict(title="Year", color=DK_FD["subtext"]),
+                        yaxis=dict(title="Value", color=DK_FD["subtext"]),
+                        legend=dict(bgcolor=DK_FD["paper"], bordercolor=DK_FD["border"]),
+                        height=380
+                    )
+                    st.plotly_chart(fig_trend, use_container_width=True)
+
             # Detailed metrics table
             _fd_section("📋 Complete Financial Metrics Database", "🗃️")
 
@@ -1895,15 +2059,38 @@ def _render_fin_doc(tabs, data, language):
                 _fd_card(p["sentence"], f"{icon} {p['direction']}{chg}", color,
                          badge=p["direction"], confidence=88)
 
-        # Ratio summary
+        # Ratio summary — enhanced with health indicators and benchmarks
         ratios = fd.get("ratio_summary",[])
         if ratios:
             st.divider()
-            _fd_section("📐 Key Financial Ratios", "🔢")
-            ratio_rows = [{"Ratio": r["ratio"], "Value": r.get("value","—"), "Year": r.get("year","—")} for r in ratios]
+            _fd_section("📐 Key Financial Ratios — With Health Assessment", "🔢")
+            st.caption("Green = Excellent | Yellow = Good | Red = Needs Attention")
+
+            ratio_cols = st.columns(min(4, len(ratios)))
+            for i, r in enumerate(ratios[:4]):
+                with ratio_cols[i]:
+                    health = r.get("health", "Unknown")
+                    h_color = DK_FD["green"] if health == "Excellent" else DK_FD["yellow"] if health == "Good" else DK_FD["red"]
+                    h_icon  = "✅" if health == "Excellent" else "🟡" if health == "Good" else "⚠️"
+                    st.markdown(f"""
+                    <div style="background:{DK_FD['paper']};border:1px solid {h_color};border-radius:10px;
+                    padding:14px;text-align:center;margin-bottom:8px">
+                        <div style="font-size:12px;color:{DK_FD['subtext']};font-weight:600">{r['ratio']}</div>
+                        <div style="font-size:22px;font-weight:800;color:{h_color};margin:6px 0">{r.get('value','—')}</div>
+                        <div style="font-size:11px;color:{h_color}">{h_icon} {health}</div>
+                        <div style="font-size:10px;color:{DK_FD['subtext']};margin-top:4px">{r.get('explanation','')[:60]}</div>
+                    </div>""", unsafe_allow_html=True)
+
+            # Full ratio table
+            ratio_rows = [{
+                "Ratio":       r["ratio"],
+                "Value":       r.get("value","—"),
+                "Year":        r.get("year","—"),
+                "Health":      r.get("health","Unknown"),
+                "What It Means": r.get("explanation","")[:80]
+            } for r in ratios]
             df_r = pd.DataFrame(ratio_rows)
-            st.dataframe(df_r.style.set_properties(**{"background-color":"#161B22","color":"#E6EDF3"}),
-                         use_container_width=True, height=280)
+            st.dataframe(df_r, use_container_width=True, height=280)
 
     # ── TAB 2: RISK FACTORS
     with tabs[2]:
@@ -1993,8 +2180,19 @@ def _render_fin_doc(tabs, data, language):
                     "Medium": DK_FD["orange"],
                     "Low": DK_FD["green"]
                 }.get(r["severity"], DK_FD["blue"])
-                _fd_card(r["sentence"], f"⚠️ {r['risk_type']}", sev_color,
-                         badge=r["severity"], confidence=85)
+                plain = r.get("plain_english", "")
+                st.markdown(f"""
+                <div class="sentence-card" style="border-left:4px solid {sev_color}">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:4px">
+                        <div style="display:flex;gap:6px;align-items:center">
+                            <span style="background:{sev_color};color:white;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700">⚠️ {r['risk_type']}</span>
+                            <span style="background:{DK_FD['grid']};color:{DK_FD['subtext']};padding:2px 8px;border-radius:8px;font-size:10px">{r['severity']}</span>
+                        </div>
+                        <span style="background:{DK_FD['grid']};color:{DK_FD['subtext']};padding:2px 8px;border-radius:8px;font-size:10px">Confidence: {r.get('confidence',85)}%</span>
+                    </div>
+                    <div style="color:{DK_FD['text']};line-height:1.6;font-size:14px;margin-bottom:6px">{r['sentence']}</div>
+                    {f'<div style="background:{DK_FD["orange_dark"]};border-radius:6px;padding:6px 10px;font-size:12px;color:{DK_FD["orange_light"]}">💡 <b>Plain English:</b> {plain}</div>' if plain else ''}
+                </div>""", unsafe_allow_html=True)
 
     # ── TAB 3: RED FLAGS
     with tabs[3]:
@@ -2052,8 +2250,21 @@ def _render_fin_doc(tabs, data, language):
             st.caption("⚠️ These are critical warning signals detected in the document. Review carefully.")
 
             for i, f in enumerate(flags[:15]):
-                _fd_card(f["sentence"], f"🚩 {f['flag']}", DK_FD["red"],
-                         badge=f"Flag #{i+1}", confidence=92)
+                sev = f.get("severity", "High")
+                sev_color = DK_FD["red"] if sev in ("Critical","High") else DK_FD["orange"]
+                plain = f.get("plain_english", "")
+                st.markdown(f"""
+                <div class="sentence-card" style="border-left:4px solid {sev_color}">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:4px">
+                        <div style="display:flex;gap:6px;align-items:center">
+                            <span style="background:{sev_color};color:white;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700">🚩 {f['flag']}</span>
+                            <span style="background:{DK_FD['grid']};color:{DK_FD['subtext']};padding:2px 8px;border-radius:8px;font-size:10px">{sev}</span>
+                        </div>
+                        <span style="background:{DK_FD['grid']};color:{DK_FD['subtext']};padding:2px 8px;border-radius:8px;font-size:10px">Flag #{i+1}</span>
+                    </div>
+                    <div style="color:{DK_FD['text']};line-height:1.6;font-size:14px;margin-bottom:6px">{f['sentence']}</div>
+                    {f'<div style="background:{DK_FD["red_dark"]};border-radius:6px;padding:6px 10px;font-size:12px;color:{DK_FD["red_light"]}">💡 <b>What this means:</b> {plain}</div>' if plain else ''}
+                </div>""", unsafe_allow_html=True)
 
             # AI analysis button
             st.markdown("<br>", unsafe_allow_html=True)
