@@ -139,16 +139,37 @@ def _export_tab(tab, data, doc_type):
 
         elif doc_type == "Newspaper Analysis":
             news = data.get("newspaper", {})
-            c1, c2 = st.columns(2)
+            c1, c2, c3, c4 = st.columns(4)
             if news.get("keyword_freq"):
-                c1.download_button("🔤 News Keywords CSV",
+                c1.download_button("🔤 Keywords CSV",
                                    export_keywords_csv(news["keyword_freq"]),
                                    "news_keywords.csv", "text/csv", use_container_width=True)
             if news.get("events"):
-                events_df = pd.DataFrame(news["events"])
+                events_df = pd.DataFrame([{
+                    "Event Type": e.get("event_type",""),
+                    "Date":       e.get("date",""),
+                    "Amount":     e.get("amount",""),
+                    "Confidence": e.get("confidence",""),
+                    "Sentence":   e.get("sentence",""),
+                } for e in news["events"]])
                 c2.download_button("🎭 Events CSV",
                                    events_df.to_csv(index=False).encode("utf-8"),
-                                   "events.csv", "text/csv", use_container_width=True)
+                                   "news_events.csv", "text/csv", use_container_width=True)
+            if news.get("category_tags"):
+                c3.download_button("🏷️ Articles by Category CSV",
+                                   export_news_csv(news["category_tags"], news.get("events",[])),
+                                   "news_articles.csv", "text/csv", use_container_width=True)
+            if news.get("named_entities"):
+                ents = news["named_entities"]
+                ent_rows = (
+                    [{"Type": "Person",       "Entity": p} for p in ents.get("people",[])] +
+                    [{"Type": "Organization", "Entity": o} for o in ents.get("orgs",[])] +
+                    [{"Type": "Location",     "Entity": l} for l in ents.get("locations",[])]
+                )
+                if ent_rows:
+                    c4.download_button("👥 Entities CSV",
+                                       pd.DataFrame(ent_rows).to_csv(index=False).encode("utf-8"),
+                                       "news_entities.csv", "text/csv", use_container_width=True)
 
         st.divider()
 
@@ -2434,7 +2455,7 @@ def _render_newspaper(tabs, data, language):
         _np_kpi(c4,"Organizations",str(len(ents_np.get("orgs",[]))),"Mentioned orgs",DK_NP["purple"],"🏢")
         _np_kpi(c5,"Locations",str(len(ents_np.get("locations",[]))),"Places",DK_NP["teal"],"📍")
 
-        # Row 3 KPIs
+        # Row 3 KPIs — now uses real accuracy data
         _np_section("⚖️ Tone & Bias Metrics")
         c1,c2,c3,c4,c5 = st.columns(5)
         tone = bias_np.get("overall_tone","Neutral")
@@ -2445,6 +2466,42 @@ def _render_newspaper(tabs, data, language):
         _np_kpi(c4,"Bias %",f"{bias_np.get('bias_percent',0)}%","Loaded language",DK_NP["orange"],"⚖️")
         _np_kpi(c5,"Sentiment",senti.get("label","N/A"),f"Score: {senti.get('score',0):+.2f}",
                 DK_NP["green"] if senti.get("score",0)>0 else DK_NP["red"] if senti.get("score",0)<0 else DK_NP["orange"],"😊")
+
+        # Row 4 — Article stats (new)
+        art_stats = news.get("article_stats", {})
+        if art_stats:
+            _np_section("📄 Document Statistics")
+            c1,c2,c3,c4,c5 = st.columns(5)
+            _np_kpi(c1,"Total Words",str(art_stats.get("total_words",0)),"In document",DK_NP["blue"],"📝")
+            _np_kpi(c2,"Avg Sentence",f"{art_stats.get('avg_sentence_len',0)} words","Length",DK_NP["green"],"📏")
+            _np_kpi(c3,"Data-Rich",str(art_stats.get("data_rich_sentences",0)),"With numbers",DK_NP["orange"],"🔢")
+            _np_kpi(c4,"Category Coverage",f"{art_stats.get('category_coverage',0)}%","Categorized",DK_NP["purple"],"🏷️")
+            _np_kpi(c5,"Reading Time",f"{art_stats.get('reading_time_min',1)} min","Estimated",DK_NP["teal"],"⏱️")
+
+        # Accuracy report (real, not hardcoded)
+        acc_report = news.get("accuracy_report", {})
+        if acc_report:
+            _np_section("🎯 Extraction Accuracy Report")
+            overall_acc = acc_report.get("overall_accuracy", 0)
+            grade       = acc_report.get("grade", "B")
+            passed      = acc_report.get("validation_passed", False)
+            acc_color   = DK_NP["green"] if overall_acc >= 90 else DK_NP["orange"] if overall_acc >= 80 else DK_NP["red"]
+
+            st.markdown(f"""
+            <div style="background:{DK_NP['paper']};border:1px solid {acc_color};border-radius:10px;
+            padding:14px 20px;margin-bottom:16px">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <div>
+                        <span style="color:{acc_color};font-size:22px;font-weight:800">{overall_acc:.1f}%</span>
+                        <span style="color:{DK_NP['subtext']};font-size:13px;margin-left:8px">Overall Accuracy</span>
+                        <span style="background:{acc_color};color:white;padding:2px 8px;border-radius:8px;font-size:11px;font-weight:700;margin-left:8px">Grade {grade}</span>
+                    </div>
+                    <span style="color:{acc_color};font-size:13px">{'✅ PASSED' if passed else '⚠️ REVIEW'}</span>
+                </div>
+                <div style="display:flex;gap:16px;margin-top:10px;flex-wrap:wrap">
+                    {" ".join(f'<span style="color:{DK_NP["subtext"]};font-size:12px">{k.replace("_"," ").title()}: <b style="color:{DK_NP["text"]}">{v:.1f}%</b></span>' for k,v in acc_report.get("component_scores",{}).items())}
+                </div>
+            </div>""", unsafe_allow_html=True)
 
         st.markdown("<br>", unsafe_allow_html=True)
 

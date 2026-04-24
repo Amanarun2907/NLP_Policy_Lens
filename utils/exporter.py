@@ -92,11 +92,25 @@ def export_metrics_csv(metrics: list) -> bytes:
     return pd.DataFrame(rows).to_csv(index=False).encode("utf-8")
 
 
-def export_news_csv(category_tags: dict, events: list[dict]) -> bytes:
+def export_news_csv(category_tags: dict, events: list) -> bytes:
+    """Export comprehensive newspaper data to CSV."""
     rows = []
+    # Category-tagged sentences
     for cat, sents in category_tags.items():
         for s in sents:
-            rows.append({"Category": cat, "Sentence": s})
+            rows.append({"Type": "Article", "Category": cat, "Content": s, "Event_Type": "", "Date": "", "Amount": ""})
+    # Events
+    for e in events:
+        rows.append({
+            "Type":       "Event",
+            "Category":   e.get("event_type", ""),
+            "Content":    e.get("sentence", ""),
+            "Event_Type": e.get("event_type", ""),
+            "Date":       e.get("date", ""),
+            "Amount":     e.get("amount", ""),
+        })
+    if not rows:
+        return b"No data available"
     return pd.DataFrame(rows).to_csv(index=False).encode("utf-8")
 
 
