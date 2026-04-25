@@ -7,15 +7,17 @@ from plotly.subplots import make_subplots
 import pandas as pd
 
 THEME = dict(
-    y1_color  = "#2471A3",
-    y2_color  = "#27AE60",
-    inc_color = "#27AE60",
-    dec_color = "#E74C3C",
-    neu_color = "#F39C12",
-    paper     = "#F8F9FA",
-    bg        = "#FFFFFF",
-    text      = "#1B2631",
-    grid      = "#E5E7EB",
+    y1_color  = "#1F6FEB",
+    y2_color  = "#238636",
+    inc_color = "#238636",
+    dec_color = "#DA3633",
+    neu_color = "#9E6A03",
+    paper     = "#161B22",
+    bg        = "#0D1117",
+    text      = "#E6EDF3",
+    subtext   = "#8B949E",
+    grid      = "#21262D",
+    border    = "#30363D",
 )
 
 
@@ -235,12 +237,13 @@ def _layout(title: str) -> dict:
     return dict(
         title=dict(text=f"<b>{title}</b>", font=dict(size=16, color=THEME["text"]), x=0.02),
         paper_bgcolor=THEME["paper"], plot_bgcolor=THEME["bg"],
-        font=dict(family="Arial, sans-serif", size=13, color=THEME["text"]),
+        font=dict(family="'Inter', Arial, sans-serif", size=13, color=THEME["text"]),
         margin=dict(t=60, b=50, l=50, r=40),
-        hoverlabel=dict(bgcolor="white", font_size=13),
-        xaxis=dict(gridcolor=THEME["grid"]),
-        yaxis=dict(gridcolor=THEME["grid"]),
-        legend=dict(bgcolor="white", bordercolor=THEME["grid"], borderwidth=1),
+        hoverlabel=dict(bgcolor=THEME["paper"], font_size=13, bordercolor=THEME["border"]),
+        xaxis=dict(gridcolor=THEME["grid"], zerolinecolor=THEME["grid"], color=THEME["subtext"]),
+        yaxis=dict(gridcolor=THEME["grid"], zerolinecolor=THEME["grid"], color=THEME["subtext"]),
+        legend=dict(bgcolor=THEME["paper"], bordercolor=THEME["border"], borderwidth=1,
+                    font=dict(color=THEME["text"])),
     )
 
 
