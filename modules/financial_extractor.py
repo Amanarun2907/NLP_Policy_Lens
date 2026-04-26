@@ -586,13 +586,13 @@ def _parse_to_raw(amount_text: str) -> float:
         text = re.sub(r"[,\s]+", " ", text).strip()
 
         # Enhanced pattern matching for number + unit combinations
-        # Pattern: number + optional unit1 + optional unit2
-        pattern = r"([\d.]+)(?:\s+(hundred|thousand|lakh|lac|crore|million|billion|trillion))?(?:\s+(hundred|thousand|lakh|lac|crore|million|billion|trillion|rupees?))?.*"
+        # Pattern: number (must start with digit) + optional unit1 + optional unit2
+        pattern = r"(\d+(?:\.\d+)?)(?:\s+(hundred|thousand|lakh|lac|crore|million|billion|trillion))?(?:\s+(hundred|thousand|lakh|lac|crore|million|billion|trillion|rupees?))?.*"
         match = re.match(pattern, text, re.IGNORECASE)
         
         if not match:
-            # Fallback: try to extract just the number
-            numbers = re.findall(r'[\d.]+', text)
+            # Fallback: try to extract just the number (must start with a digit)
+            numbers = re.findall(r'\d+(?:\.\d+)?', text)
             if numbers:
                 return float(numbers[0]) * (1/usd_to_inr_rate if is_usd else 1)
             return 0.0
@@ -622,7 +622,7 @@ def _parse_to_raw(amount_text: str) -> float:
             value = 0
         elif value > 10000000:  # 1 crore crore seems unreasonable
             # Might be a parsing error, try simpler approach
-            numbers = re.findall(r'[\d.]+', original_text)
+            numbers = re.findall(r'\d+(?:\.\d+)?', original_text)
             if numbers:
                 value = float(numbers[0])
                 if "lakh" in original_text:
