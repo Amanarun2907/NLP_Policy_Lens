@@ -1,140 +1,203 @@
-# 🔍 PolicyLens — NLP Policy Document Intelligence Platform
+# PolicyLens - NLP-Driven Policy Document Analysis
 
-A comprehensive NLP-powered platform for analyzing Indian policy documents with AI insights, advanced visualizations, and 99%+ accuracy.
+An NLP-driven system that reads policy documents and converts them into structured visual insights.
 
-## 🚀 Features
+## 📁 Project Structure
 
-### 📄 Financial Budget Analysis
-- Sector-wise allocation extraction with bar charts and treemaps
-- Fiscal deficit, revenue deficit, capital expenditure KPI cards
-- Tax slab changes detection and comparison table
-- New schemes and initiatives list with category tagging
-- Top 10 sectors by allocation — ranked visualization
-- Sentiment analysis on budget speech
-- Word cloud of most used terms
-- Year-on-year comparison (upload two budgets)
-- Groq AI — "Ask anything about this budget" chatbot
-- Groq AI — Auto-generated executive summary
-- Groq AI — Impact analysis (who benefits, who is affected)
-- Export extracted data as CSV + JSON
-
-### 📈 Economic Survey Analysis
-- Key economic indicators extraction — GDP, inflation, unemployment, growth rate
-- Sector performance summary (agriculture, industry, services)
-- Policy recommendations detection and listing
-- Trend analysis with line charts (multi-year data)
-- Comparative economic metrics table
-- Groq AI — Summary of each chapter/section
-- Groq AI — "What does this mean for common people?" plain English explanation
-- Sentiment and tone analysis across sections
-- Word cloud and top keyword frequency chart
-- Export as CSV + JSON
-
-### 🏢 Financial Document Analysis
-- Revenue, profit, loss, EBITDA extraction
-- Key financial ratios detection
-- Risk factors section extraction and listing
-- Management discussion highlights
-- Important dates and deadlines extraction
-- Groq AI — Financial health summary
-- Groq AI — Red flags and risk detection
-- Named entity extraction — companies, people, locations
-- Sentiment analysis on management commentary
-- Export as CSV + JSON
-
-### 📰 Newspaper Analysis
-- Named entity recognition — people, organizations, locations, events
-- Topic modeling — top themes in the newspaper
-- Sentiment analysis per article/section
-- Important events and dates extraction
-- Most mentioned entities ranked chart
-- Keyword frequency and word cloud
-- Groq AI — Daily news summary in 5 bullet points
-- Groq AI — Bias detection
-- Category tagging — Politics, Economy, Sports, Technology, etc.
-- Export as CSV + JSON
-
-## 🛠️ Setup
-
-### 1. Clone the repository
-```bash
-git clone https://github.com/Amanarun2907/NLP_Policy_Lens.git
-cd NLP_Policy_Lens
+```
+NLPTK/
+│
+├── docs/                           # Documentation and visual assets
+│   ├── flowcharts/                 # Project flowcharts and diagrams
+│   │   ├── FINAL_FLOWCHART_CLEAN.png
+│   │   ├── FINAL_POLICYLENS_FLOWCHART.png
+│   │   ├── flowchart1_project_description.png
+│   │   └── flowchart2_nlp_pipeline.png
+│   └── project_docs/               # Project documentation
+│       ├── NLP_README.md
+│       ├── NLP_SUBMISSION_GUIDE.md
+│       └── description.txt
+│
+├── scripts/                        # Utility scripts
+│   ├── flowcharts.py              # Flowchart generation script
+│   ├── pipeline.py                # Pipeline visualization script
+│   └── punya.py                   # Test script
+│
+├── policylens/                     # Main application directory
+│   ├── modules/                   # Core NLP modules
+│   │   ├── __init__.py
+│   │   ├── comparison_engine.py
+│   │   ├── economic_survey_extractor.py
+│   │   ├── financial_doc_extractor.py
+│   │   ├── financial_extractor.py
+│   │   ├── groq_analyzer.py
+│   │   ├── newspaper_extractor.py
+│   │   ├── policy_extractor.py
+│   │   └── tax_extractor.py
+│   │
+│   ├── utils/                     # Utility functions
+│   │   ├── __init__.py
+│   │   ├── accuracy_validator.py
+│   │   ├── comparison_viz.py
+│   │   ├── exporter.py
+│   │   ├── groq_client.py
+│   │   ├── keyword_scorer.py
+│   │   ├── ner_extractor.py
+│   │   ├── normalizer.py
+│   │   ├── pdf_extractor.py
+│   │   ├── sentence_segmenter.py
+│   │   ├── sentiment_analyzer.py
+│   │   ├── text_cleaner.py
+│   │   └── visualizer.py
+│   │
+│   ├── scripts/                   # Execution and utility scripts
+│   │   ├── add_domain_analysis.py
+│   │   ├── add_final_analysis.py
+│   │   ├── add_remaining_domains.py
+│   │   ├── build_and_execute_notebook.py
+│   │   ├── build_nb.py
+│   │   ├── complete_nlp_notebook.py
+│   │   ├── create_nlp_analysis.py
+│   │   ├── execute_notebook.py
+│   │   ├── generate_all_graphs_as_images.py
+│   │   ├── generate_all_nlp_graphs.py
+│   │   ├── run_all_cells.py
+│   │   ├── run_and_save_notebook.py
+│   │   └── run_nlp_analysis.py
+│   │
+│   ├── tests/                     # Test files
+│   │   ├── test_accuracy_validation.py
+│   │   ├── test_complete.py
+│   │   ├── test_phase2.py
+│   │   ├── test_phase3.py
+│   │   ├── test_phase4.py
+│   │   ├── test_phase5_6.py
+│   │   └── test_phase7.py
+│   │
+│   ├── notebooks/                 # Jupyter notebooks
+│   │   ├── NLP.ipynb
+│   │   └── NLP_COMPLETE.ipynb
+│   │
+│   ├── nlp_graphs/               # Generated NLP analysis graphs (PNG)
+│   ├── generated_graphs/         # Generated HTML graphs and visualizations
+│   ├── outputs/                  # Output files (reports, exports)
+│   │
+│   ├── app.py                    # Main Streamlit application
+│   ├── budget_dashboard.py       # Budget dashboard module
+│   ├── config.py                 # Configuration settings
+│   ├── renders.py                # Rendering utilities
+│   ├── setup.py                  # Setup script
+│   ├── requirements.txt          # Python dependencies
+│   ├── README.md                 # Project README
+│   ├── NLP_README.md            # NLP-specific documentation
+│   ├── NLP_SUBMISSION_GUIDE.md  # Submission guide
+│   ├── description.txt          # Project description
+│   ├── .env                     # Environment variables
+│   ├── .gitignore               # Git ignore rules
+│   ├── start.bat                # Windows start script
+│   └── OPEN_NOTEBOOK.bat        # Notebook launcher script
+│
+├── .zencoder/                    # Zencoder workflows
+└── .zenflow/                     # Zenflow workflows
 ```
 
-### 2. Install dependencies
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.8+
+- pip package manager
+
+### Installation
+
+1. Navigate to the policylens directory:
+```bash
+cd policylens
+```
+
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Download spaCy model
+3. Set up environment variables:
+   - Copy `.env.example` to `.env` (if available)
+   - Configure your API keys and settings
+
+### Running the Application
+
+**Option 1: Using the start script (Windows)**
 ```bash
-python -m spacy download en_core_web_sm
+start.bat
 ```
 
-### 4. Set up environment variables
-Create a `.env` file in the project root:
-```
-GROQ_API_KEY=your_groq_api_key_here
-```
-Get your free API key at: https://console.groq.com
-
-### 5. Run the application
+**Option 2: Using Python directly**
 ```bash
 streamlit run app.py
 ```
 
-Open your browser at **http://localhost:8501**
-
-## 📦 Requirements
-- Python 3.10+
-- Streamlit
-- Plotly
-- Pandas
-- Groq SDK
-- spaCy
-- pdfplumber / PyPDF2
-- NLTK
-- python-dotenv
-
-## 🏗️ Project Structure
+**Option 3: Open Jupyter Notebook**
+```bash
+OPEN_NOTEBOOK.bat
 ```
-policylens/
-├── app.py                    # Main Streamlit application
-├── budget_dashboard.py       # Financial Budget dashboard
-├── renders.py                # All section render functions
-├── config.py                 # Configuration
-├── modules/
-│   ├── financial_extractor.py
-│   ├── economic_survey_extractor.py
-│   ├── financial_doc_extractor.py
-│   ├── newspaper_extractor.py
-│   ├── policy_extractor.py
-│   ├── tax_extractor.py
-│   ├── groq_analyzer.py
-│   └── comparison_engine.py
-└── utils/
-    ├── pdf_extractor.py
-    ├── text_cleaner.py
-    ├── normalizer.py
-    ├── sentence_segmenter.py
-    ├── ner_extractor.py
-    ├── keyword_scorer.py
-    ├── sentiment_analyzer.py
-    ├── accuracy_validator.py
-    ├── visualizer.py
-    ├── exporter.py
-    └── groq_client.py
+or
+```bash
+jupyter notebook notebooks/NLP_COMPLETE.ipynb
 ```
 
-## 🎓 Academic Project
-This is an NLP course project demonstrating real-world application of:
-- Named Entity Recognition (NER)
-- Sentiment Analysis
-- Topic Modeling
-- Information Extraction
-- Text Classification
-- AI-powered summarization (Groq LLaMA 3)
+## 📊 Features
 
-## 📄 License
-MIT License
+- **PDF Text Extraction**: Extract text from policy documents using pdfplumber and PyPDF2
+- **NLP Processing**: Advanced text analysis using spaCy and NLTK
+- **Financial Extraction**: Identify sector allocations, fiscal indicators, and budget data
+- **Policy Detection**: Detect new schemes and government initiatives
+- **Tax Analysis**: Extract tax changes and exemptions
+- **Interactive Dashboard**: Visualize insights using Streamlit and Plotly
+- **Year-on-Year Comparison**: Compare budget data across years
+
+## 🛠️ Technology Stack
+
+- **PDF Extraction**: pdfplumber, PyPDF2, pytesseract
+- **NLP Processing**: spaCy, NLTK, Regex
+- **Data Handling**: Pandas, NumPy
+- **Visualization**: Streamlit, Plotly, Matplotlib
+- **Machine Learning**: scikit-learn (TF-IDF)
+
+## 📖 Documentation
+
+For detailed documentation, see:
+- [NLP README](docs/project_docs/NLP_README.md)
+- [Submission Guide](docs/project_docs/NLP_SUBMISSION_GUIDE.md)
+- [Project Description](docs/project_docs/description.txt)
+
+## 🧪 Testing
+
+Run tests from the policylens directory:
+```bash
+cd policylens
+python -m pytest tests/
+```
+
+Or run individual test files:
+```bash
+python tests/test_complete.py
+```
+
+## 📈 Generating Flowcharts
+
+To regenerate project flowcharts:
+```bash
+python scripts/flowcharts.py
+python scripts/pipeline.py
+```
+
+## 📝 License
+
+[Add your license information here]
+
+## 👥 Contributors
+
+[Add contributor information here]
+
+## 🤝 Contributing
+
+[Add contribution guidelines here]
